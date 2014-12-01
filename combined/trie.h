@@ -7,10 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-enum trie_action {
-    SEARCH,
-    DELETE
-};
+enum trie_action { SEARCH, DELETE };
 
 //store number of children in type
 enum trie_type {
@@ -47,7 +44,6 @@ union eight_bit_value {
 typedef struct TrieNode {
     uint8_t endpoint;
     uint8_t value;
-    enum trie_type type; //easier just to include this than a pointer to the root.
     struct TrieNode ** children;
 } TrieNode;
 
@@ -56,20 +52,22 @@ typedef struct Trie {
     enum trie_type type;
 } Trie;
 
-Trie* make_trie(enum trie_type type);
+/*  BEGIN API  */
 
-TrieNode* make_trie_node(uint8_t value, enum trie_type t);
+Trie* make_trie(enum trie_type type);
 
 //sz is in bytes.
 //for insert, return 1 if successful, 0 otherwise
 int trie_insert(Trie *t, void *item, int sz);
 
-int trie_traverse(Trie* t, void* item, int sz, enum trie_action ta);
-
+//sz is in bytes.
 //for delete, return 1 if successfully deleted something, 0 otherwise
 int trie_delete(Trie *t, void *item, int sz);
 
+//sz is in bytes.
 //for search, return 1 if the item given was found, 0 otherwise
 int trie_search(Trie *t, void *item, int sz);
+
+/*  END API  */
  
 #endif //__TRIE_H_GUARD__

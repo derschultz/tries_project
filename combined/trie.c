@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 Trie* make_trie(enum trie_type t){
     Trie *ret = malloc(sizeof(Trie));
@@ -18,7 +19,6 @@ Trie* make_trie(enum trie_type t){
 TrieNode* make_trie_node(uint8_t value, enum trie_type t){
     TrieNode* ret = malloc(sizeof(TrieNode));
     ret->value = value;
-    ret->type = t; 
     ret->endpoint = 0;
     ret->children = (TrieNode**) malloc (((int) t) * (sizeof (TrieNode*)));
     int i;
@@ -472,7 +472,7 @@ int trie_delete(Trie *t, void *item, int sz){
 int trie_search(Trie *t, void *item, int sz){
     return trie_traverse(t, item, sz, SEARCH);
 }
-#define NRANDOM 100000
+#define NRANDOM 1000
 int main(){
     Trie * tries[4];
     tries[0] = make_trie(BIT);
@@ -489,13 +489,18 @@ int main(){
     }
     printf("done.\n");
 
+    struct timespec ts_before, ts_after;
+    memset(&ts_before, 0, sizeof(struct timespec));
+    memset(&ts_after, 0, sizeof(struct timespec));
+
     for(j = 0; j < 4; j++){
+        clock_gettime(CLOCK_MONOTONIC, &ts_before);
         printf("working on trie %d.\n", j);
         Trie *t = tries[j];
         printf("inserting into trie %d...", j);
         for(i = 0; i < NRANDOM; i++){
             if(!trie_insert(t, (void*) &(randoms[i]), len)){
-                printf("error inserting %lu into trie!\n", randoms[i]);
+                printf("error inserting %u into trie!\n", randoms[i]);
             }
         }
         printf("done.\n");
@@ -503,7 +508,7 @@ int main(){
         printf("searching in trie %d...", j);
         for(i = 0; i < NRANDOM; i++){
             if(!trie_search(t, (void*) &(randoms[i]), len)){
-                printf("error searching for %lu in trie!\n", randoms[i]);
+                printf("error searching for %u in trie!\n", randoms[i]);
             }
         }
         printf("done.\n");
@@ -517,10 +522,17 @@ int main(){
         printf("making sure delete worked in trie %d...", j);
         for(i = 0; i < NRANDOM; i++){
             if(trie_search(t, (void*) &(randoms[i]), len)){
-                printf("found %lu in the trie after it was supposed to be gone!\n", randoms[i]);
+                printf("found %u in the trie after it was supposed to be gone!\n", randoms[i]);
             }
         }
         printf("done.\n");
+        clock_gettime(CLOCK_MONOTONIC, &ts_after); 
+        
+        printf("time delta: %li seconds, %u nanoseconds\n", 
+                ts_after.tv_sec - ts_before.tv_sec,
+                abs(ts_after.tv_nsec - ts_before.tv_nsec));
 
+        memset(&ts_before, 0, sizeof(struct timespec));
+        memset(&ts_after, 0, sizeof(struct timespec));
     }
 }
