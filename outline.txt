@@ -7,5 +7,6 @@ math analysis
 code explanation
 
 improvements
+    loop unwinding ?
 
 api documentation (need to cleanup code for this)

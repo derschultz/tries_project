@@ -1,4 +1,8 @@
 #include "trie.h"
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 Trie* make_trie(enum trie_type t){
     Trie *ret = malloc(sizeof(Trie));
@@ -468,26 +472,55 @@ int trie_delete(Trie *t, void *item, int sz){
 int trie_search(Trie *t, void *item, int sz){
     return trie_traverse(t, item, sz, SEARCH);
 }
-
+#define NRANDOM 100000
 int main(){
     Trie * tries[4];
     tries[0] = make_trie(BIT);
     tries[1] = make_trie(DBLBIT);
     tries[2] = make_trie(NIBBLE);
     tries[3] = make_trie(BYTE);
-    int i, ret;
-    uint64_t sf = 938245789234;
-    for(i = 0; i < 4; i++){
-        printf("on trie %d\n", i);
-        ret = trie_insert(tries[i], (void*) &sf, sizeof(sf));
-        printf("\tinsert rc: %d\n", ret);
-        ret = trie_insert(tries[i], (void*) &sf, sizeof(sf));
-        printf("\tinsert rc: %d\n", ret);
-        ret = trie_search(tries[i], (void*) &sf, sizeof(sf));
-        printf("\tsearch rc: %d\n", ret);
-        ret = trie_delete(tries[i], (void*) &sf, sizeof(sf));
-        printf("\tdelete rc: %d\n", ret);
-        ret = trie_search(tries[i], (void*) &sf, sizeof(sf));
-        printf("\tsearch rc: %d\n", ret);
+    int i, ret, j;
+    int len = sizeof(uint32_t);
+    uint32_t randoms[NRANDOM];
+    int FD = open("/dev/urandom",O_RDONLY);
+    printf("generating random numbers...");
+    for(i = 0; i < NRANDOM; i++){
+        read(FD, (void*) &(randoms[i]), len);
+    }
+    printf("done.\n");
+
+    for(j = 0; j < 4; j++){
+        printf("working on trie %d.\n", j);
+        Trie *t = tries[j];
+        printf("inserting into trie %d...", j);
+        for(i = 0; i < NRANDOM; i++){
+            if(!trie_insert(t, (void*) &(randoms[i]), len)){
+                printf("error inserting %lu into trie!\n", randoms[i]);
+            }
+        }
+        printf("done.\n");
+
+        printf("searching in trie %d...", j);
+        for(i = 0; i < NRANDOM; i++){
+            if(!trie_search(t, (void*) &(randoms[i]), len)){
+                printf("error searching for %lu in trie!\n", randoms[i]);
+            }
+        }
+        printf("done.\n");
+        
+        printf("deleting in trie %d...", j);
+        for(i = 0; i < NRANDOM; i++){
+            trie_delete(t, (void*) &(randoms[i]), len);
+        }
+        printf("done.\n");
+
+        printf("making sure delete worked in trie %d...", j);
+        for(i = 0; i < NRANDOM; i++){
+            if(trie_search(t, (void*) &(randoms[i]), len)){
+                printf("found %lu in the trie after it was supposed to be gone!\n", randoms[i]);
+            }
+        }
+        printf("done.\n");
+
     }
 }
