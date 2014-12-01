@@ -1,0 +1,11 @@
+introduction to tries
+    comparison to other data structures
+    
+
+math analysis
+
+code explanation
+
+improvements
+
+api documentation (need to cleanup code for this)
