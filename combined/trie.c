@@ -472,21 +472,31 @@ int trie_delete(Trie *t, void *item, int sz){
 int trie_search(Trie *t, void *item, int sz){
     return trie_traverse(t, item, sz, SEARCH);
 }
-#define NRANDOM 1000
-int main(){
+int main(int argc, char** argv){
+    if(argc != 4){
+        printf("Usage: ./trie <count> <integer size in bytes> <input file>\n");
+        exit(-1);
+    }
+
     Trie * tries[4];
     tries[0] = make_trie(BIT);
     tries[1] = make_trie(DBLBIT);
     tries[2] = make_trie(NIBBLE);
     tries[3] = make_trie(BYTE);
     int i, ret, j;
-    int len = sizeof(uint32_t);
-    uint32_t randoms[NRANDOM];
-    int FD = open("/dev/urandom",O_RDONLY);
-    printf("generating random numbers...");
-    for(i = 0; i < NRANDOM; i++){
+    int count = atoi(argv[1]);
+    int len = atoi(argv[2]);
+    uint8_t randoms[count*len]; //store each integer as a bunch of adjacent bytes; this allows us to point to the first byte, but "bite" off the whole integer (har har).
+    int FD = open(argv[3],O_RDONLY);
+    if(!FD){
+        printf("Error opening %s for reading.\n", argv[1]);
+        exit(-2);
+    }
+    printf("reading %d integers of size %d bytes from %s...",count, len, argv[3]);
+    for(i = 0; i < count; i += len){
         read(FD, (void*) &(randoms[i]), len);
     }
+    close(FD);
     printf("done.\n");
 
     struct timespec ts_before, ts_after;
@@ -497,35 +507,37 @@ int main(){
         clock_gettime(CLOCK_MONOTONIC, &ts_before);
         printf("working on trie %d.\n", j);
         Trie *t = tries[j];
-        printf("inserting into trie %d...", j);
-        for(i = 0; i < NRANDOM; i++){
+        //printf("inserting into trie %d...", j);
+        for(i = 0; i < count; i += len){
             if(!trie_insert(t, (void*) &(randoms[i]), len)){
-                printf("error inserting %u into trie!\n", randoms[i]);
+                printf("error inserting %u into trie %d!\n", randoms[i], j);
             }
         }
-        printf("done.\n");
+        //printf("done.\n");
 
-        printf("searching in trie %d...", j);
-        for(i = 0; i < NRANDOM; i++){
+        //printf("searching in trie %d...", j);
+        for(i = 0; i < count; i += len){
             if(!trie_search(t, (void*) &(randoms[i]), len)){
-                printf("error searching for %u in trie!\n", randoms[i]);
+                printf("error searching for %u in trie %d!\n", randoms[i], j);
             }
         }
-        printf("done.\n");
+        //printf("done.\n");
         
-        printf("deleting in trie %d...", j);
-        for(i = 0; i < NRANDOM; i++){
-            trie_delete(t, (void*) &(randoms[i]), len);
-        }
-        printf("done.\n");
-
-        printf("making sure delete worked in trie %d...", j);
-        for(i = 0; i < NRANDOM; i++){
-            if(trie_search(t, (void*) &(randoms[i]), len)){
-                printf("found %u in the trie after it was supposed to be gone!\n", randoms[i]);
+        //printf("deleting in trie %d...", j);
+        for(i = 0; i < count; i += len){
+            if(!trie_delete(t, (void*) &(randoms[i]), len)){
+                printf("error deleting %u from trie %d!\n", randoms[i], j);
             }
         }
-        printf("done.\n");
+        //printf("done.\n");
+
+        //printf("making sure delete worked in trie %d...", j);
+        for(i = 0; i < count; i += len){
+            if(trie_search(t, (void*) &(randoms[i]), len)){
+                printf("found %u in trie %d after it was supposed to be gone!\n", randoms[i], j);
+            }
+        }
+        //printf("done.\n");
         clock_gettime(CLOCK_MONOTONIC, &ts_after); 
         
         printf("time delta: %li seconds, %u nanoseconds\n", 
