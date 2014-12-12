@@ -473,21 +473,35 @@ int trie_search(Trie *t, void *item, int sz){
     return trie_traverse(t, item, sz, SEARCH);
 }
 int main(int argc, char** argv){
-    if(argc != 4){
-        printf("Usage: ./trie <count> <integer size in bytes> <input file>\n");
+    if(argc != 5){
+        printf("Usage: ./trie <count> <integer size in bytes> <input file> <trie type [1-4]>\n");
         exit(-1);
     }
-
-    Trie * tries[4];
-    tries[0] = make_trie(BIT);
-    tries[1] = make_trie(DBLBIT);
-    tries[2] = make_trie(NIBBLE);
-    tries[3] = make_trie(BYTE);
-    int i, ret, j;
+    int i, ret;
     int count = atoi(argv[1]);
     int len = atoi(argv[2]);
     uint8_t randoms[count*len]; //store each integer as a bunch of adjacent bytes; this allows us to point to the first byte, but "bite" off the whole integer (har har).
     int FD = open(argv[3],O_RDONLY);
+    int type = atoi(argv[4]);
+    Trie *t = NULL;
+    switch (type){
+        case 1:
+            t = make_trie(BIT);
+            break;
+        case 2:
+            t = make_trie(DBLBIT);
+            break;
+        case 3:
+            t = make_trie(NIBBLE);
+            break;
+        case 4:
+            t = make_trie(BYTE);
+            break;
+        default:
+            printf("I don't know what trie of type %d is!\n", type);
+            exit(-2);
+            break;
+    }
     if(!FD){
         printf("Error opening %s for reading.\n", argv[1]);
         exit(-2);
@@ -497,54 +511,50 @@ int main(int argc, char** argv){
         read(FD, (void*) &(randoms[i]), len);
     }
     close(FD);
-    printf("done.\n");
+    printf("done.\noperating on trie of type %d...",type);
 
     struct timespec ts_before, ts_after;
     memset(&ts_before, 0, sizeof(struct timespec));
     memset(&ts_after, 0, sizeof(struct timespec));
 
-    for(j = 0; j < 4; j++){
-        clock_gettime(CLOCK_MONOTONIC, &ts_before);
-        printf("working on trie %d.\n", j);
-        Trie *t = tries[j];
-        //printf("inserting into trie %d...", j);
-        for(i = 0; i < count; i += len){
-            if(!trie_insert(t, (void*) &(randoms[i]), len)){
-                printf("error inserting %u into trie %d!\n", randoms[i], j);
-            }
+    clock_gettime(CLOCK_MONOTONIC, &ts_before);
+    //printf("inserting into trie %d...", j);
+    for(i = 0; i < count; i += len){
+        if(!trie_insert(t, (void*) &(randoms[i]), len)){
+            printf("error inserting %u into trie!\n", randoms[i]);
         }
-        //printf("done.\n");
-
-        //printf("searching in trie %d...", j);
-        for(i = 0; i < count; i += len){
-            if(!trie_search(t, (void*) &(randoms[i]), len)){
-                printf("error searching for %u in trie %d!\n", randoms[i], j);
-            }
-        }
-        //printf("done.\n");
-        
-        //printf("deleting in trie %d...", j);
-        for(i = 0; i < count; i += len){
-            if(!trie_delete(t, (void*) &(randoms[i]), len)){
-                printf("error deleting %u from trie %d!\n", randoms[i], j);
-            }
-        }
-        //printf("done.\n");
-
-        //printf("making sure delete worked in trie %d...", j);
-        for(i = 0; i < count; i += len){
-            if(trie_search(t, (void*) &(randoms[i]), len)){
-                printf("found %u in trie %d after it was supposed to be gone!\n", randoms[i], j);
-            }
-        }
-        //printf("done.\n");
-        clock_gettime(CLOCK_MONOTONIC, &ts_after); 
-        
-        printf("time delta: %li seconds, %u nanoseconds\n", 
-                ts_after.tv_sec - ts_before.tv_sec,
-                abs(ts_after.tv_nsec - ts_before.tv_nsec));
-
-        memset(&ts_before, 0, sizeof(struct timespec));
-        memset(&ts_after, 0, sizeof(struct timespec));
     }
+    //printf("done.\n");
+
+    //printf("searching in trie %d...", j);
+    for(i = 0; i < count; i += len){
+        if(!trie_search(t, (void*) &(randoms[i]), len)){
+            printf("error searching for %u in trie!\n", randoms[i]);
+        }
+    }
+    //printf("done.\n");
+    
+    //printf("deleting in trie %d...", j);
+    for(i = 0; i < count; i += len){
+        if(!trie_delete(t, (void*) &(randoms[i]), len)){
+            printf("error deleting %u from trie!\n", randoms[i]);
+        }
+    }
+    //printf("done.\n");
+
+    //printf("making sure delete worked in trie %d...", j);
+    for(i = 0; i < count; i += len){
+        if(trie_search(t, (void*) &(randoms[i]), len)){
+            printf("found %u in trie after it was supposed to be gone!\n", randoms[i]);
+        }
+    }
+    //printf("done.\n");
+    clock_gettime(CLOCK_MONOTONIC, &ts_after); 
+    printf("done.\n");
+    printf("time delta: %li seconds, %u nanoseconds\n", 
+            ts_after.tv_sec - ts_before.tv_sec,
+            abs(ts_after.tv_nsec - ts_before.tv_nsec));
+
+    memset(&ts_before, 0, sizeof(struct timespec));
+    memset(&ts_after, 0, sizeof(struct timespec));
 }
