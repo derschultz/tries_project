@@ -642,7 +642,7 @@ int main(int argc, char** argv){
     clock_gettime(CLOCK_MONOTONIC, &ts_after); 
     timespec_diff(&ts_before, &ts_after, &delta);
     timespec_div(&delta, count, &divided);
-    printf("%li.%09u,%li.%09u,", 
+    printf("%li.%09u,%li.%09u", 
            delta.tv_sec, delta.tv_nsec, 
            divided.tv_sec, divided.tv_nsec);
    //printf("done.\n");
