@@ -1,0 +1,33 @@
+todo
+
+get greg's tex file to compile
+
+write sections of report 
+	introduction
+
+	math of tries
+
+	code explanation
+
+	improvements
+
+	api docs
+
+make charts in tex using pgfplots
+	split out data: filename = $type.$int_length.$operation, each line = ($size, $time)
+	operation order in csv: 
+		1 count
+		2 int len
+		3 type
+		4 successful insert total
+		5 successful insert each
+		6 failed insert total
+		7 failed insert each
+		8 successful search total
+		9 successful search each
+		10 successful delete total
+		11 successful delete each
+		12 failed delete total
+		13 failed delete each
+		14 failed search total
+		15 failed search each 
