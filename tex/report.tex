@@ -1,38 +1,13 @@
-\documentclass[11pt,onecolumn]{article}
 \documentclass{llncs}
 \usepackage{llncsdoc}
 
-%% SQUISH
 \intextsep=0.6\intextsep
 \textfloatsep=0.6\textfloatsep
 \abovecaptionskip=0.6\abovecaptionskip
 \belowcaptionskip=0.6\belowcaptionskip
 
-%\usepackage{times,psfig,graphics,epsfig,amsmath,shapepar,fancyhdr,amsthm}
 \usepackage{graphicx,amsfonts,amssymb,url,float,verbatim,listings,courier,pgfplots}
 \pgfplotsset{compat=newest}
-%\usepackage{makeidx}
-%\usepackage[bookmarks=true,bookmarksnumbered=true,colorlinks=true,linkcolor=blue]{hyperref} 
-
-%\setlength{\topmargin}{-0.7cm}
-%\setlength{\oddsidemargin}{0cm}
-%\setlength{\evensidemargin}{0cm}
-%\setlength{\textheight}{229mm}
-%\setlength{\textwidth}{164mm}
-
-\newtheorem{thm}[theorem]{Theorem}
-%\newtheorem{invar}{Invariant}
-\newtheorem{lem}[theorem]{Lemma}
-\newtheorem{cor}[theorem]{Corollary}
-%\newtheorem{obs}{Observation}
-%\newtheorem{conj}{Conjecture}
-%\newtheorem{prop}{Proposition}
-%\newtheorem{claim}{Claim}
-
-%\newtheorem*{note}{Note to authors}
-
-%\theoremstyle{definition}
-%\newtheorem{definition}{Definition}
 
 \title{Nibbles and bytes: an implementation of the trie data structure using different branching factors}
 
@@ -45,37 +20,38 @@
 \maketitle
 
 \begin{abstract}
-Rewrite this to frame this in terms of the code written, not the experiment done.\\
-We explore the use of differing trie spread factors in the use of tries and the resulting performance differences across those different types of tries. Typically, tries are structured to store a string in a character by character fashion in a tree structure; our implementation compares the performance when the input bits are considered in 1-, 2-, 4-, or 8-bit chunks (a 1-bit trie may also be called a bitwise trie; an 8-bit trie is analogous to going character by character on a platform where a character variable consumes a single byte, as in many implementations of the C programming language).
+We created an implementation of the trie data structure that, instead of considering input strings character by character, considered input strings in chunks of 1, 2, 4, or 8 bytes uniformly through the trie. The purpose of this was twofold: to complete a trie library that is able to work on arbitrary length input, and to do some simple testing of the behavior of the tries that used differing internal chunk sizes when having the same data applied to them. The C programming language was chosen for the ease it provided when working on individual bits in memory.
 \end{abstract}
 
 \section{Introduction}
 \label{Introduction}
-Rewrite this to frame this in terms of the code written, not the experiment done.\\
-In this report, we examine the use of tries that, instead of storing input strings in a character by character fashion, store input strings by taking a specific amount of bits at each node: 1, 2, 4, or 8. Typically, a trie will store a single character at each node; with an 8-bit character type as is usual in C, this results in 256 (2\textsuperscript{8}) children. However, if the amount of bits accounted for at each node is smaller, the amount of possible children on each node is also smaller, resulting in tries that are deeper in depth but fan out much less in terms of roots and leaves.
+When storing unique pieces of data in a program, a programmer may often use a few different structures, depending on the type of data and other constraints. A trie may sometimes be one of those structures, due to some of the properties a trie can provide. One of the reasons to use a trie over another datastructure is having all operations (search, insert, delete) be done in time proportional to the input data, rather than being done in time proportional to the data already in the data structure, as with other trees.
 
 \section{Background}
 what is a trie? + basic math
+A trie is a specific type of tree where each node in the tree stores a part of the input data. For example, if one were to input the string 'dog' into an empty trie, the three nodes 'd', 'o', and 'g' would be placed in that order hierarchically. If one were to then add the string 'don' into that trie, the only addition would be the addition of a 'n' node as a child of the exiting 'o' node - essentially, the path of nodes created by travelling from the root to a leaf forms an input string in the trie. \\ %TODO maybe insert a simple picture here?
+For any operation on a trie (search, insert, delete), the amount of time taken in the worst case scenario is linear to the size of the input. This means that the trie excels when operation timing is strictly limited. The reason for this is that in any insert scenario, the time taken is exactly linear to the size of the input: each chunk of the input must be considered as the trie is traversed (and perhaps extended). In the search scenario (of which the delete scenario is simply a special case), the time taken is bounded above by the size of the input; we can drop out of such a search or delete if part of the expected path in the trie is not present. \\
+%TODO more mathematical explanation needed? 
 \newpage
 
-\newpage
 \section{Manual Page}
 %TODO make this in monospace, like a real man page!
 %maybe include it the way we do the code below?
+%in addition - make sure all except section titles (NAME, SYNOPSIS, etc.) are indented, while section titles are not.
 \noindent NAME
 
-\noindent make\_trie, trie\_insert, trie\_delete, trie\_search - Create and interact with tries.\\
+make\_trie, trie\_insert, trie\_delete, trie\_search - Create and interact with tries.\\
 
 \noindent SYNOPSIS
 
-\noindent Trie *make\_trie(enum trie\_type type);\\
+Trie *make\_trie(enum trie\_type type);\\
 int trie\_insert(Trie *t, void *item, int sz);\\
 int trie\_delete(Trie *t, void *item, int sz);\\
 int trie\_search(Trie *t, void *item, int sz);\\
 
 \noindent DESCRIPTION
 
-\noindent The make\_trie() function creates a trie struct in memory and returns a pointer to it. The type of trie (the branching factor) must be specified as one of the following enumerated values: BIT, DBLBIT, NIBBLE, BYTE.\\
+The make\_trie() function creates a trie struct in memory and returns a pointer to it. The type of trie (the branching factor) must be specified as one of the following enumerated values: BIT, DBLBIT, NIBBLE, BYTE.\\
 The trie\_insert() function takes the data of length sz bytes which is pointed to by item and attempts inserts it into the trie t.\\
 The trie\_delete() function takes the data of length sz bytes which is pointed to by item and attempts to remove it from the trie t.\\
 The trie\_insert() function takes the data of length sz bytes which is pointed to by item and attempts inserts it into the trie t.\\
@@ -91,27 +67,19 @@ The trie\_search function returns 1 when the specified value is found in the giv
 
 \newpage
 \section{Code}
-Code goes here
-%TODO make sure the code doesn't go outside the margins! may need to alter code itself.
-\lstinputlisting[label=header, caption=Header]{trie.h}
-\lstinputlisting[label=code, caption=Code]{trie.c}
+%TODO make sure the code doesn't go outside the margins! may need to alter code itself. or figure out how to have lstinputlisting do the wrapping for us.
+\lstinputlisting[label=header, caption=trie.h]{trie.h}
+\newpage
+\lstinputlisting[label=code, caption=trie.c]{trie.c}
+
 \newpage
 \section{Results}
-Graphs go here
+These are the results of a short experiment comparing the performance of the 4 different trie styles against two sets of string - one containing unique 32-bit strings and the other containing unique 64-bit strings.
 \include{plots} %modified plots.tex that is no longer standalone
 
 \newpage
 \section{Conclusion and discussion}
-what happened (nibble-based tries outperformed the others)\\
-why (don't know. possibly due to caching strategy of cpu? perhaps dive into asm output of gcc)\\
-further interest points (diff cpu types, more data input types like 128-bit integers)\\
-%-------------------------------------------------------------------------
-% Bibliography and index
-%\bibliography{cbots}
-%\bibliographystyle{abbrv}
-% TODO fill this in
-
-
-
-
-
+From the plots, it's easy to see that although each trie theoretically should perform equivalently, the choice of spread causes different behavior in terms of time consumed. Specifically, the trie that considered input string in terms of 4-bit (nibble-sized) chunks performed the best. This is unexpected - one would think that either extreme (the bitwise or bytewise tries) would perform the best, and the rest would gradually perform worse as we increased or decreased the chunk size considered by each node.\\
+In terms of the performance, it's possible that the generated code / CPU cache size was such that it favored the trie whose chunk size was 4 bits, but that is beyond the scope of this paper. It's also possible that other CPUs would exhibit different behavior (for reference, these data points were generated on a computer built around an AMD FX-6300 CPU, with enough memory such that memory paging out to disk was not an issue during the experiment).
+One last alteration that might be interesting to look at in tries is the use of other trie techniques, like compression of common paths, but this would require adapting those techniques to take into account the different chunk size used by each of the tries in the library above.
+\end{document}
