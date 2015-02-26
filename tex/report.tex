@@ -20,15 +20,17 @@
 \maketitle
 
 \begin{abstract}
-We created an implementation of the trie data structure that, instead of considering input strings character by character, considered input strings in chunks of 1, 2, 4, or 8 bytes uniformly through the trie. The purpose of this was twofold: to complete a trie library that is able to work on arbitrary length input, and to do some simple testing of the behavior of the tries that used differing internal chunk sizes when having the same data applied to them. The C programming language was chosen for the ease it provided when working on individual bits in memory.
+I created an implementation of the trie data structure that, instead of considering input strings character by character, considered input strings in chunks of 1, 2, 4, or 8 bytes uniformly through the trie. The purpose of this was twofold: to complete a trie library that is able to work on arbitrary length input, and to do some simple testing of the behavior of the tries that used differing internal chunk sizes when having the same data applied to them. The C programming language was chosen for the ease it provided when working on individual bits in memory, which was necessary for this project.
 \end{abstract}
 
 \section{Introduction}
 \label{Introduction}
-When storing unique pieces of data in a program, a programmer may often use a few different structures, depending on the type of data and other constraints. A trie may sometimes be one of those structures, due to some of the properties a trie can provide. One of the reasons to use a trie over another datastructure is having all operations (search, insert, delete) be done in time proportional to the input data, rather than being done in time proportional to the data already in the data structure, as with other trees.
+When storing data in a program, a programmer may opt to use a few different structures, depending on the type of data and other constraints. For many common use cases, it does not matter which data structure that the programmer chooses to use - the main requirement that is placed upon the data structure is that it be easy to use (so that including it in the in the program, or allowing others to access it, does not unnecessarily burden the programmer), that its performance is consistently good under normal circumstances (that is, contrived examples that cause degraded performance that may nevertheless be useful in certain cases, such as to illustrate trade-offs between different data structures), and (optionally) that its design fits the needs of the programmer (consider the difference between a last in, first out (LIFO) structure like a stack and a first in, first out (FIFO) structure like a queue). On the last point, the optional part comes from the fact that while in some circumstances, a simple array will be fine for a program, in others, some kind of ordering (as in a queue) or mapping (as in a hash table) may be desired.
+
+A trie may sometimes be one of those structures chosen to be used for data storage in a program, due to some of the properties a trie can provide. While a trie can be used to simply contain elements (in the same way a set or multiset would, but allowing in-order traversal like an ordered list would), a trie can also be used to map elements to one another, as a hash table would be used for. One of the reasons to use a trie over another datastructure is having all operations (search, insert, delete) be done in time proportional to the input data, rather than being done in time proportional to the data already in the data structure, as with other trees, which may be important in certain cases where timing is of utmost importance.
 
 \section{Background}
-A trie is a specific type of tree where each node in the tree stores a part of the input data. For example, if one were to input the string 'dog' into an empty trie, the three nodes 'd', 'o', and 'g' would be placed in that order hierarchically. If one were to then add the string 'don' into that trie, the only addition would be the addition of a 'n' node as a child of the exiting 'o' node - essentially, the path of nodes created by travelling from the root to a leaf forms an input string in the trie. \\ %TODO maybe insert a simple picture here?
+A trie is a specific type of tree where each node in the tree stores a part of the input data. For example, if one were to input the string 'dog' into an empty trie, the three nodes 'd', 'o', and 'g' would be placed in that order hierarchically, with the 'g' node marked as an endpoint node. If one were to then add the string 'don' into that trie, the only addition would be the addition of a 'n' node (marked as an endpoint) as a child of the exiting 'o' node - essentially, the path of nodes created by travelling from the root to a marked node forms an input string in the trie. To further this example, adding the string 'do' to the tree would simply mark the existing 'o' node as an endpoint, with no further consumption of space. In this way, for sets of strings that share prefixes, space is used very efficiently as only a single copy of the shared common prefix of the string needs to be stored, rather than storing a copy of that shared prefix for each entry in the set that is stored in the trie. \\ %TODO maybe insert a simple picture here?
 For any operation on a trie (search, insert, delete), the amount of time taken in the worst case scenario is linear to the size of the input. This means that the trie excels when operation timing is strictly limited. The reason for this is that in any insert scenario, the time taken is exactly linear to the size of the input: each chunk of the input must be considered as the trie is traversed (and perhaps extended). In the search scenario (of which the delete scenario is simply a special case), the time taken is bounded above by the size of the input; we can drop out of such a search or delete if part of the expected path in the trie is not present. \\
 %TODO more mathematical explanation needed? 
 \newpage
@@ -42,7 +44,7 @@ From the plots, it's easy to see that although each trie theoretically should pe
 In terms of the performance, it's possible that the generated code / CPU cache size was such that it favored the trie whose chunk size was 4 bits, but that is beyond the scope of this paper. It's also possible that other CPUs would exhibit different behavior (for reference, these data points were generated on a computer built around an AMD FX-6300 CPU, with enough memory such that memory paging out to disk was not an issue during the experiment).
 One last alteration that might be interesting to look at in tries is the use of other trie techniques, like compression of common paths, but this would require adapting those techniques to take into account the different chunk size used by each of the tries in the library above.
 \newpage
-
+\ttdefault
 \section{Manual Page}
 %TODO make this in monospace, like a real man page!
 %maybe include it the way we do the code below?
@@ -54,23 +56,23 @@ make\_trie, trie\_insert, trie\_delete, trie\_search - Create and interact with 
 \noindent SYNOPSIS
 
 Trie *make\_trie(enum trie\_type type);\\
-int trie\_insert(Trie *t, void *item, int sz);\\
-int trie\_delete(Trie *t, void *item, int sz);\\
-int trie\_search(Trie *t, void *item, int sz);\\
+\indent int trie\_insert(Trie *t, void *item, int sz);\\
+\indent int trie\_delete(Trie *t, void *item, int sz);\\
+\indent int trie\_search(Trie *t, void *item, int sz);\\
 
 \noindent DESCRIPTION
 
-The make\_trie() function creates a trie struct in memory and returns a pointer to it. The type of trie (the branching factor) must be specified as one of the following enumerated values: BIT, DBLBIT, NIBBLE, BYTE.\\
-The trie\_insert() function takes the data of length sz bytes which is pointed to by item and attempts inserts it into the trie t.\\
+\noindent The make\_trie() function creates a trie struct in memory and returns a pointer to it. The type of trie (the branching factor) must be specified as one of the following enumerated values: BIT, DBLBIT, NIBBLE, BYTE.\\
+The trie\_insert() function takes the data of length sz bytes which is pointed to by item and attempts to insert it into the trie t.\\
 The trie\_delete() function takes the data of length sz bytes which is pointed to by item and attempts to remove it from the trie t.\\
 The trie\_search() function takes the data of length sz bytes which is pointed to by item and attempts to find it in the trie t.\\
 
 \noindent RETURN VALUE
 
-\noindent The return value of make\_trie() is a pointer to a struct of type Trie which is suitable for use with the insert, delete, and search functions.\\
-The trie\_insert function returns 1 when the specified value is inserted into the given trie and 0 on failure (due to the item already being present in the given trie).\\
-The trie\_delete function returns 1 when the specified value is removed from the given trie and 0 on failure (due to the item not being found in the trie to delete).\\
-The trie\_search function returns 1 when the specified value is found in the given trie and 0 otherwise.\\
+\noindent The return value of make\_trie() is a pointer to a struct of type Trie which is suitable for use with the trie\_insert, trie\_delete, and trie\_search functions.\\
+The trie\_insert function returns 1 when the specified value is inserted into the given trie and 0 when the specified value is already in the tree.\\
+The trie\_delete function returns 1 when the specified value is removed from the given trie and 0 when the specified value is not already in the tree to remove.\\
+The trie\_search function returns 1 when the specified value is found in the given trie and 0 if the specified value is not found.\\
 
 \newpage
 \section{Code}
