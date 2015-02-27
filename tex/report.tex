@@ -6,7 +6,7 @@
 \abovecaptionskip=0.6\abovecaptionskip
 \belowcaptionskip=0.6\belowcaptionskip
 
-\usepackage{graphicx,amsfonts,amssymb,url,float,verbatim,listings,courier,pgfplots}
+\usepackage{graphicx,amsfonts,amssymb,url,float,verbatim,listings,courier,pgfplots,tikz,tikzscale}
 \pgfplotsset{compat=newest}
 
 \title{Nibbles and bytes: an implementation of the trie data structure using different branching factors}
@@ -25,7 +25,7 @@ I created an implementation of the trie data structure that, instead of consider
 
 \section{Introduction}
 \label{Introduction}
-When storing data in a program, a programmer may opt to use a few different structures, depending on the type of data and other constraints. For many common use cases, it does not matter which data structure that the programmer chooses to use - the main requirement that is placed upon the data structure is that it be easy to use (so that including it in the in the program, or allowing others to access it, does not unnecessarily burden the programmer), that its performance is consistently good under normal circumstances (that is, contrived examples that cause degraded performance that may nevertheless be useful in certain cases, such as to illustrate trade-offs between different data structures), and (optionally) that its design fits the needs of the programmer (consider the difference between a last in, first out (LIFO) structure like a stack and a first in, first out (FIFO) structure like a queue). On the last point, the optional part comes from the fact that while in some circumstances, a simple array will be fine for a program, in others, some kind of ordering (as in a queue) or mapping (as in a hash table) may be desired.
+When storing data in a program, a programmer may opt to use a few different structures, depending on the type of data and other constraints. For many common use cases, it does not matter which data structure that the programmer chooses to use - the main requirement that is placed upon the data structure is that it be easy to use (so that including it in the in the program, or allowing others to access it, does not unnecessarily burden the programmer), that its performance is consistently good under normal circumstances (that is, outside of contrived examples that cause degraded performance that may nevertheless be useful in certain cases, such as to illustrate trade-offs between different data structures), and (optionally) that its design fits the needs of the programmer (consider the difference between a last in, first out (LIFO) structure like a stack and a first in, first out (FIFO) structure like a queue). On the last point, the optional part comes from the fact that while in some circumstances, a simple array will be fine for a program, while in others, some kind of ordering (as in a queue) or mapping (as in a hash table) may be desired.
 
 A trie may sometimes be one of those structures chosen to be used for data storage in a program, due to some of the properties a trie can provide. While a trie can be used to simply contain elements (in the same way a set or multiset would, but allowing in-order traversal like an ordered list would), a trie can also be used to map elements to one another, as a hash table would be used for. One of the reasons to use a trie over another datastructure is having all operations (search, insert, delete) be done in time proportional to the input data, rather than being done in time proportional to the data already in the data structure, as with other trees, which may be important in certain cases where timing is of utmost importance.
 
@@ -35,8 +35,28 @@ For any operation on a trie (search, insert, delete), the amount of time taken i
 %TODO more mathematical explanation needed? 
 \newpage
 \section{Results}
-These are the results of a short experiment comparing the performance of the 4 different trie styles against two sets of string - one containing unique 32-bit strings and the other containing unique 64-bit strings.
-\include{plots} %modified plots.tex that is no longer standalone
+These are the results of a short experiment comparing the performance of the 4 different trie styles against two sets of strings - one set containing unique 32-bit strings and the other containing unique 64-bit strings. In these experiments, the average time consumed for each operation is plotted against a subset of one of the two sets previoulsy mentioned. In addition, the plots are further broken down to more easily show any difference in time consumed between when an operation succeeded or when and operation failed (for example, deleting a existing value from a trie would be a "successful" delete, while attempting to delete a non-existant value from a trie would be a "failed" delete). Lastly, each graph contains multiple plots to illustrate the significance of the number of bits stored at each node in the trie, which turned out to be the most important variable with respect to time consumed for each operation by the trie. \\
+
+%\include{plots} %modified plots.tex that is no longer standalone
+%TODO 32 vs 64 bit 
+\newpage
+On inserts, since we used unique integers, each insert traversed the same amount of nodes for each insert operation. On the other hand although in the "success" case, the trie may have had to have been extended to hold parts of the string, this was never an issue for the "failure" case (since the string attempting to be inserted already existed in the trie).\\
+\includegraphics[width=0.5\linewidth]{32_successful_insert.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_successful_insert.tex.tikz}
+\includegraphics[width=0.5\linewidth]{32_failed_insert.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_failed_insert.tex.tikz}
+\newpage
+On searches, the code is able to kick out of the traversal of the trie when a path to a node expected from the string is not found, so the time consumed on a failed search is bounded from above by the time consumed by the insert function, or by successful searches, which would also have to traverse the entire string's length in the trie. \\
+\includegraphics[width=0.5\linewidth]{32_successful_search.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_successful_search.tex.tikz}
+\includegraphics[width=0.5\linewidth]{32_failed_search.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_failed_search.tex.tikz}
+\newpage
+Similar to the search case, the delete operation on tries is able to drop out of the operation early when part of a string that is searched for is not found. However, since this implementation of the trie does not attempt to cleanup the trie after a delete is done (which was chosen to enable quicker later inserts, as paths would not be tore down/regenerated as deletes and inserts were done), the time taken for the failed attempts is similar to the time taken for the successful attempts at deleting values from the trie. \\
+\includegraphics[width=0.5\linewidth]{32_successful_delete.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_successful_delete.tex.tikz}
+\includegraphics[width=0.5\linewidth]{32_failed_delete.tex.tikz}
+\includegraphics[width=0.5\linewidth]{64_failed_delete.tex.tikz}
 
 \newpage
 \section{Conclusion and discussion}
