@@ -1,5 +1,9 @@
 \begin{tikzpicture}
 \begin{axis}[
+legend style={
+        cells={anchor=east},
+            legend pos=outer north east,
+},
 xlabel=Data Set Size,
 ylabel=Average Time Taken (s),
 title=64 bit integers - successful search]

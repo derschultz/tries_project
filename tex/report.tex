@@ -35,36 +35,38 @@ For any operation on a trie (search, insert, delete), the amount of time taken i
 %TODO more mathematical explanation needed? 
 \newpage
 \section{Results}
-These are the results of a short experiment comparing the performance of the 4 different trie styles against two sets of strings - one set containing unique 32-bit strings and the other containing unique 64-bit strings. In these experiments, the average time consumed for each operation is plotted against a subset of one of the two sets previoulsy mentioned. In addition, the plots are further broken down to more easily show any difference in time consumed between when an operation succeeded or when and operation failed (for example, deleting a existing value from a trie would be a "successful" delete, while attempting to delete a non-existant value from a trie would be a "failed" delete). Lastly, each graph contains multiple plots to illustrate the significance of the number of bits stored at each node in the trie, which turned out to be the most important variable with respect to time consumed for each operation by the trie. \\
-
+These are the results of a short experiment comparing the performance of the 4 different trie styles against two sets of strings - one set containing unique 32-bit strings and the other containing unique 64-bit strings. In these experiments, the average time consumed for each operation is plotted against a subset of one of the two sets previoulsy mentioned. In addition, the plots are further broken down to more easily show any difference in time consumed between when an operation succeeded or when and operation failed (for example, deleting a existing value from a trie would be a "successful" delete, while attempting to delete a non-existant value from a trie would be a "failed" delete). Lastly, each graph contains multiple plots to illustrate the significance of the number of bits stored at each node in the trie, which turned out to be the most important variable with respect to time consumed for each operation taken against the trie. \\
 %\include{plots} %modified plots.tex that is no longer standalone
 %TODO 32 vs 64 bit 
 \newpage
 On inserts, since we used unique integers, each insert traversed the same amount of nodes for each insert operation. On the other hand although in the "success" case, the trie may have had to have been extended to hold parts of the string, this was never an issue for the "failure" case (since the string attempting to be inserted already existed in the trie).\\
-\includegraphics[width=0.5\linewidth]{32_successful_insert.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_successful_insert.tex.tikz}
-\includegraphics[width=0.5\linewidth]{32_failed_insert.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_failed_insert.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_successful_insert.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_successful_insert.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_failed_insert.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_failed_insert.tex.tikz}
+
 \newpage
 On searches, the code is able to kick out of the traversal of the trie when a path to a node expected from the string is not found, so the time consumed on a failed search is bounded from above by the time consumed by the insert function, or by successful searches, which would also have to traverse the entire string's length in the trie. \\
-\includegraphics[width=0.5\linewidth]{32_successful_search.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_successful_search.tex.tikz}
-\includegraphics[width=0.5\linewidth]{32_failed_search.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_failed_search.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_successful_search.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_successful_search.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_failed_search.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_failed_search.tex.tikz}
+
 \newpage
 Similar to the search case, the delete operation on tries is able to drop out of the operation early when part of a string that is searched for is not found. However, since this implementation of the trie does not attempt to cleanup the trie after a delete is done (which was chosen to enable quicker later inserts, as paths would not be tore down/regenerated as deletes and inserts were done), the time taken for the failed attempts is similar to the time taken for the successful attempts at deleting values from the trie. \\
-\includegraphics[width=0.5\linewidth]{32_successful_delete.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_successful_delete.tex.tikz}
-\includegraphics[width=0.5\linewidth]{32_failed_delete.tex.tikz}
-\includegraphics[width=0.5\linewidth]{64_failed_delete.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_successful_delete.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_successful_delete.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{32_failed_delete.tex.tikz}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{64_failed_delete.tex.tikz}
 
 \newpage
 \section{Conclusion and discussion}
-From the plots, it's easy to see that although each trie theoretically should perform equivalently, the choice of spread causes different behavior in terms of time consumed. Specifically, the trie that considered input string in terms of 4-bit (nibble-sized) chunks performed the best. This is unexpected - one would think that either extreme (the bitwise or bytewise tries) would perform the best, and the rest would gradually perform worse as we increased or decreased the chunk size considered by each node.\\
-In terms of the performance, it's possible that the generated code / CPU cache size was such that it favored the trie whose chunk size was 4 bits, but that is beyond the scope of this paper. It's also possible that other CPUs would exhibit different behavior (for reference, these data points were generated on a computer built around an AMD FX-6300 CPU, with enough memory such that memory paging out to disk was not an issue during the experiment).
-One last alteration that might be interesting to look at in tries is the use of other trie techniques, like compression of common paths, but this would require adapting those techniques to take into account the different chunk size used by each of the tries in the library above.
+From the plots, it's easy to see that although each trie theoretically should perform equivalently, the choice of spread causes different behavior in terms of time consumed. Specifically, the trie that considered input string in terms of 4-bit (nibble-sized) chunks performed the best. This is unexpected - one would think that either extreme (the bitwise or bytewise tries) would perform the best, and the rest would gradually perform worse as we increased or decreased the chunk size considered by each node. One possible explanation is that the overhead consumed by the structure around the trie nodes (which was constant across all types) was enough to slow down the bitwise and doublebitwise implementations of the trie, but not enough to slow down the nibblewise trie, which was able to outperform the bytewise trie for other reasons.\\
+In terms of the performance, it's possible that the generated code / CPU cache size was such that it favored the trie whose chunk size was 4 bits, but that is beyond the scope of this paper. It's also possible that other CPUs would exhibit different behavior (for reference, these data points were generated on a computer built around an AMD FX-6300 CPU, with enough memory such that memory paging out to disk was not an issue during the experiment). This would also explain why the nibblewise trie outperformed the bytewise trie, even though the bytewise trie would have had the least structural overhead of the trie types that were experimented with, due to the breadth over depth approach the bytewise trie would use compared to the depth over breadth approach the bitwise trie uses.\\
+One alteration that might be interesting to look at in tries is the use of other trie techniques, like compression of common paths, but this would require adapting those techniques to take into account the different chunk size used by each of the tries in the library above. Compression of common paths would merge common infixes and suffixes as the trie does now with prefixes, with the added computational complexity that would be created to account for the change in the algorithm.\\
+There is also a CPU intrinsic instruction that could be harnessed to further speed actions against the trie up, called Count Leading Zeroes (CLZ). Use of this instruction would allow the algorithm to first examine the input string, find the first set bit, and jump that far down in the trie, rather than having to manually walk through the path of zeroes. This approach would keep track of paths in the trie composed entirely of leading zeroes to facilitate this purpose, which would only require storage size linear to the number of bits stored in the longest string in the trie. \\
 \newpage
-\ttdefault
+%\ttdefault
 \section{Manual Page}
 %TODO make this in monospace, like a real man page!
 %maybe include it the way we do the code below?
