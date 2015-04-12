@@ -1,0 +1,28 @@
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,node distance=2cm,
+                    thick,main node/.style={circle,draw,font=\sffamily\Large\bfseries},
+                    end node/.style={circle,white,draw=black,fill=black,font=\sffamily\Large\bfseries},
+                    legend node/.style={font=\sffamily\Large\bfseries}]
+\node [main node] (1) {d};
+\node [main node] (2) [below of=1] {o};
+\node [end node] (3) [below of=2] {g};
+\node [main node] (4) [right=1cm and 2cm of 1] {d};
+\node [main node] (5) [below of=4] {o};
+\node [end node] (6) [below left of=5] {g};
+\node [end node] (7) [below right of=5] {n};
+\node [main node] (8) [right=1cm and 4cm of 4] {d};
+\node [end node] (9) [below of=8] {o};
+\node [end node] (10) [below left of=9] {g};
+\node [end node] (11) [below right of=9] {n};
+
+\path[every node/.style={font=\sffamily\small}]
+(1) edge node [] {} (2)
+(2) edge node [] {} (3)
+(4) edge node [] {} (5)
+(5) edge node [] {} (6)
+    edge node [] {} (7)
+(8) edge node [] {} (9)
+(9) edge node [] {} (10)
+    edge node [] {} (11)
+;
+
+\end{tikzpicture}

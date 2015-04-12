@@ -7,6 +7,8 @@
 \belowcaptionskip=0.6\belowcaptionskip
 
 \usepackage{graphicx,amsfonts,amssymb,url,float,verbatim,listings,courier,pgfplots,tikz,tikzscale}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
 \pgfplotsset{compat=newest}
 
 \title{Nibbles and bytes: an implementation of the trie data structure using different branching factors}
@@ -31,6 +33,12 @@ A trie may sometimes be one of those structures chosen to be used for data stora
 
 A trie is a specific type of tree where each node in the tree stores a part of the input data. For example, if one were to input the string 'dog' into an empty trie, the three nodes 'd', 'o', and 'g' would be placed in that order hierarchically, with the 'g' node marked as an endpoint node. If one were to then add the string 'don' into that trie, the only addition would be the addition of a 'n' node (marked as an endpoint) as a child of the existing 'o' node - essentially, the path of nodes created by travelling from the root to a marked node forms an input string in the trie. To further this example, adding the string 'do' to the tree would simply mark the existing 'o' node as an endpoint, with no further consumption of space. In this way, for sets of strings that share prefixes, space is used very efficiently as only a single copy of the shared common prefix of the string needs to be stored, rather than storing a copy of that shared prefix for each entry in the set that is stored in the trie. \\ 
 %TODO insert picture of trie described here
+\begin{center}
+\includegraphics[width=\linewidth,height=0.5\linewidth]{example_trie.tex.tikz}
+\\
+Trie states after adding the strings 'dog', 'don', and 'do'.\\
+Endpoints are darkened.\\
+\end{center}
 In this implementation of the trie data structure, the tries created can be of four types: bytewise, nibblewise (half byte; four bits), doublebitwise, or bitwise. In each case, the number of bits held at each node in the trie is noted in the name - for example, the nibblewise trie would hold four bits in each node, while the doublebitwise trie would hold two bits in each node. For the tree mentioned above, each node held exactly one character of the inserted string. In the implementation of tries that this project has created, that association of one character per node would be equivalent to bytewise trie, since we are using C strings with one byte per character. \\
 There are three operations done against a trie: insert a string into the trie, check whether a string exists in the trie, or delete a string from the trie. In the case of inserting a string of bits into a trie, we first partition the input string into chunks of a length based on the trie. For example, in a bytewise trie, each chunk would be exactly eight bits in size. From those chunks, we walk the trie by going through each chunk and placing it in the trie if needed. For each node n we walk to, the child node we move to from node n is the child of n that corresponds with the bits in the current chunk. For example, in a bitwise trie, each node would contain a zero or a one and would have two child nodes, one for each possible value that can be represented with a single bit. In a bytewise trie, each node would contain eight bits of information, and 256 (2\textsuperscript{8}) children - one for each possible value that can be represented with a byte. \\
 For the search and delete operations, we again partition the input string (to be searched for or deleted from the trie) as with the insert case, and proceed to traverse the trie with these chunks. In contrast to the insert case, the search and delete cases allow us to drop out of a trie traversal when a chunk is not found in the trie - the expected chunk not being found in the trie would indicate that the value we are searching for (possibly to delete) does not exist in the trie, and we can return from the operation as appropriate. Although this implementation does not do this, it should be noted that it is also possible to clean up a trie after a delete, by walking back up the trie and pruning any nodes that have no other children. This implementation does not do this cleanup in order to hasten later inserts, which the cleanup might possibly slow down by causing the path to be recreated by the insertion routine.\\
